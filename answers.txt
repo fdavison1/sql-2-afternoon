@@ -1,0 +1,182 @@
+
+--PRACTICE JOINS---------------------------------------------------------------- 
+(accidentally refreshed after first 7)
+
+--8
+SELECT t.name, g.name, title FROM track t
+JOIN genre g ON g.genre_id = t.genre_id
+JOIN album ON album.album_id = t.album_id
+WHERE t.genre_id = (SELECT genre_id FROM genre
+                  WHERE name = 'Alternative & Punk');
+
+--black diamond
+(accidentally refreshed again)
+
+--NESTED QUERIES_______________________________________________________________
+
+--1
+SELECT * FROM invoice
+WHERE invoice_id IN (SELECT invoice_id FROM invoice_line
+                    WHERE unit_price > .99);
+
+--2
+SELECT * FROM playlist_track 
+WHERE playlist_id IN (SELECT playlist_id FROM playlist
+                     WHERE name = 'Music')
+
+--3
+SELECT * FROM track 
+WHERE track_id IN (SELECT track_id FROM playlist_track 
+                   WHERE playlist_id = 5)
+
+--4
+SELECT * FROM track
+WHERE genre_id IN (SELECT genre_id FROM genre
+                   WHERE name ILIKE 'COMEDY')
+
+--5
+SELECT * FROM track
+WHERE album_id IN (SELECT album_id FROM album
+                  WHERE title ILIKE 'fireball' )
+
+--6
+SELECT * FROM track
+WHERE album_id IN (SELECT album_id FROM album 
+                   WHERE artist_id IN (SELECT artist_id FROM artist
+                                       WHERE name ILIKE 'queen'))
+
+
+
+--PRACTICE UPDATING ROWS-------------------------------------------------------
+
+--1
+UPDATE customer
+SET fax = NULL;
+
+--2
+UPDATE customer
+SET company = 'Self'
+WHERE company IS NULL;
+
+--3
+UPDATE customer
+SET last_name = 'Thompson'
+WHERE first_name = 'Julia';
+
+--4
+UPDATE customer
+SET support_rep_id = 4
+WHERE email = 'luisrojas@yahoo.cl';
+
+--5
+UPDATE track
+SET composer = 'The darkness around us'
+WHERE genre_id = (SELECT genre_id FROM genre
+                  WHERE name = 'Metal');
+
+--GROUP BY-------------------------------------------------------------------------
+
+--1
+SELECT genre_id, COUNT(*)  FROM track
+GROUP BY genre_id
+
+--2
+SELECT COUNT(*) FROM track
+GROUP BY genre_id IN (SELECT genre_id FROM genre
+                  WHERE name ILIKE 'pop' OR name ILIKE 'rock')
+
+--3
+SELECT ar.name, COUNT(album_id) FROM album al
+JOIN artist ar ON ar.artist_id = al.artist_id
+GROUP BY ar.name
+ORDER BY COUNT DESC;
+
+--USE DISTINCT-------------------------------------------------------------------------
+
+--1
+SELECT DISTINCT composer FROM track;
+
+--2
+SELECT DISTINCT billing_postal_code FROM invoice;
+
+--3
+SELECT DISTINCT company FROM customer
+ORDER BY company;
+
+--DELETE ROWS----------------------------------------------------------------------------
+
+--1
+DELETE FROM practice_delete 
+WHERE type = 'bronze'
+
+--2
+DELETE FROM practice_delete
+WHERE type = 'silver';
+
+--3
+DELETE FROM practice_delete
+WHERE value = 150;
+
+--eCommerce Simulation------------------------------------------------------------------
+
+CREATE TABLE users (
+  user_id SERIAL PRIMARY KEY,
+	name VARCHAR,
+	email VARCHAR
+);
+
+CREATE TABLE products (
+  product_id SERIAL PRIMARY KEY,
+ 	name VARCHAR,
+  price INT
+);
+
+CREATE TABLE orders (
+  order_id SERIAL PRIMARY KEY,
+  user_id INT REFERENCES users(user_id),
+  product_id INT REFERENCES products(product_id)
+  );
+
+INSERT INTO users (name, email)
+VALUES 
+('user1', 'email1'),
+('user2', 'email2'),
+('user3', 'email3');
+
+INSERT INTO products (name, price)
+VALUES 
+('hot dog', 1),
+('pizza', 2),
+('ramen', 3);
+
+INSERT INTO orders (user_id, product_id)
+VALUES 
+(1, 2),
+(2, 3),
+(3, 1),
+(2, 2),
+(3, 2);
+
+--queries
+SELECT o.order_id, p.name FROM orders o
+JOIN products p ON p.product_id = o.product_id
+WHERE order_id = 1;
+
+SELECT * FROM orders;
+
+SELECT * FROM orders
+WHERE user_id = 2;
+
+SELECT users.name, COUNT(order_id) FROM orders
+JOIN users ON users.user_id = orders.user_id
+GROUP BY users.user_id;
+
+--black diamond
+SELECT u.name, SUM(price) FROM orders o
+JOIN products p ON p.product_id = o.product_id
+JOIN users u ON u.user_id = o.user_id
+GROUP BY u.name
+ORDER BY sum DESC;
+
+
+
